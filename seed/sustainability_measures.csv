@@ -1,0 +1,16 @@
+id,industry,title,description,expected_reduction
+1,Manufacturing,Rooftop Solar PV Installation,Install solar panels on factory roofs to generate clean electricity,25
+2,Manufacturing,VFD Installation on Motors,Install Variable Frequency Drives on heavy machinery electric motors,15
+3,Manufacturing,Waste Heat Recovery System,Capture and reuse exhaust heat from boilers and ovens,12
+4,Retail,LED Lighting Upgrade,Replace fluorescent lights with energy-efficient LED fixtures,18
+5,Retail,Smart HVAC Thermostats,Install programmable thermostats to optimize heating and cooling schedules,10
+6,Hospitality,Low-Flow Water Fixtures,Install low-flow showerheads and aerators in guest rooms,15
+7,Hospitality,Commercial Kitchen Heat Recovery,Recycle heat from kitchen exhausts to preheat hot water,10
+8,Agriculture,Drip Irrigation System,Transition from flood irrigation to high-efficiency drip irrigation,30
+9,Agriculture,Electric Tractor Fleet,Transition diesel-powered tractors to battery-electric tractors,40
+10,Logistics,Route Optimization Software,Implement GPS routing to reduce empty miles and fuel consumption,15
+11,Logistics,EV Delivery Vans,Replace diesel delivery vans with electric commercial vehicles,50
+12,Warehousing,LED Sensors and Skylights,Install motion sensor lighting and utilize natural skylights,20
+13,Warehousing,Electric Forklift Fleet,Replace propane or diesel forklifts with electric alternatives,30
+14,Retail,Zero Plastic Packaging,Switch to biodegradable and paper-based packaging materials,25
+15,Hospitality,Food Waste Composting,Implement food waste segregation and local composting programs,35

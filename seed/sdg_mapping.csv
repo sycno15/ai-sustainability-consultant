@@ -1,0 +1,17 @@
+id,measure_id,sdg_number,sdg_name
+1,1,7,Affordable and Clean Energy
+2,1,13,Climate Action
+3,2,9,Industry Innovation and Infrastructure
+4,3,9,Industry Innovation and Infrastructure
+5,4,12,Responsible Consumption and Production
+6,5,11,Sustainable Cities and Communities
+7,6,6,Clean Water and Sanitation
+8,7,12,Responsible Consumption and Production
+9,8,6,Clean Water and Sanitation
+10,9,13,Climate Action
+11,10,11,Sustainable Cities and Communities
+12,11,13,Climate Action
+13,12,7,Affordable and Clean Energy
+14,13,12,Responsible Consumption and Production
+15,14,12,Responsible Consumption and Production
+16,15,12,Responsible Consumption and Production

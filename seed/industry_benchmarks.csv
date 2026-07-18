@@ -1,0 +1,7 @@
+id,industry,benchmark_emissions
+1,Manufacturing,1200000
+2,Retail,350000
+3,Hospitality,600000
+4,Agriculture,950000
+5,Logistics,1500000
+6,Warehousing,450000

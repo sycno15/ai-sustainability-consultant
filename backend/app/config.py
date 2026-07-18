@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     SUPABASE_URL: str = Field(..., min_length=1)
     SUPABASE_ANON_KEY: str = Field(..., min_length=1)
     SUPABASE_SERVICE_ROLE_KEY: str = Field(..., min_length=1)
+    DATABASE_URL: str = Field(..., min_length=1)
     JWT_SECRET: str = Field(..., min_length=1)
     RESEND_API_KEY: str = Field(..., min_length=1)
     FRONTEND_URL: str = "http://localhost:3000"

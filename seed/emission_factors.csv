@@ -1,0 +1,6 @@
+id,activity,unit,emission_factor
+1,electricity,kWh,0.42
+2,diesel,liters,2.68
+3,petrol,liters,2.31
+4,water,m3,0.34
+5,waste,kg,0.52
