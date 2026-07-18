@@ -1,6 +1,9 @@
-from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 from app.config import settings, logger
+
+from app.api.auth import router as auth_router
 
 app = FastAPI(
     title="AI Sustainability Consultant API",
@@ -9,9 +12,63 @@ app = FastAPI(
     openapi_url="/api/v1/openapi.json"
 )
 
+app.include_router(auth_router, prefix="/api/v1")
+
 @app.on_event("startup")
 async def startup_event():
     logger.info("Initializing AI Sustainability Consultant Backend...")
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    logger.warning(f"HTTPException on {request.url.path}: {exc.detail} (Status: {exc.status_code})")
+    
+    code = "BAD_REQUEST"
+    if exc.status_code == 401:
+        code = "UNAUTHORIZED"
+    elif exc.status_code == 403:
+        code = "FORBIDDEN"
+    elif exc.status_code == 404:
+        code = "NOT_FOUND"
+    elif exc.status_code == 422:
+        code = "VALIDATION_ERROR"
+        
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "success": False,
+            "error": {
+                "code": code,
+                "message": exc.detail
+            }
+        }
+    )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = []
+    for err in exc.errors():
+        # Clean up path locations (e.g. body -> email)
+        loc_parts = [str(p) for p in err.get("loc", []) if p != "body"]
+        loc = " -> ".join(loc_parts)
+        msg = err.get("msg", "")
+        if loc:
+            errors.append(f"{loc}: {msg}")
+        else:
+            errors.append(msg)
+            
+    message = "; ".join(errors) if errors else "Validation failed"
+    logger.warning(f"Validation error on {request.url.path}: {message}")
+    
+    return JSONResponse(
+        status_code=422,
+        content={
+            "success": False,
+            "error": {
+                "code": "VALIDATION_ERROR",
+                "message": message
+            }
+        }
+    )
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
