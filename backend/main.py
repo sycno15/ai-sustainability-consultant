@@ -22,20 +22,11 @@ app = FastAPI(
     openapi_url="/api/v1/openapi.json"
 )
 
-# Local/dev origins (LAN IP included so phone/other devices on the network work)
-_cors_origins = {
-    settings.FRONTEND_URL,
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://ai-sustainability-consultant.vercel.app",
-}
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=list(_cors_origins),
-    allow_origin_regex = (
-    r"https://ai-sustainability-consultant\.vercel\.app",
-    r"|http://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+):\d+",
-),
+    allow_origins=[
+        "https://ai-sustainability-consultant.vercel.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -45,13 +36,13 @@ app.add_middleware(
 os.makedirs("static/reports", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-app.include_router(auth_router, prefix="/api/v1")
-app.include_router(dashboard_router, prefix="/api/v1")
-app.include_router(assessment_router, prefix="/api/v1")
-app.include_router(workflow_router, prefix="/api/v1")
-app.include_router(report_router, prefix="/api/v1")
-app.include_router(email_router, prefix="/api/v1")
-app.include_router(internal_router, prefix="/api/v1")
+app.include_router(auth_router)
+app.include_router(dashboard_router)
+app.include_router(assessment_router)
+app.include_router(workflow_router)
+app.include_router(report_router)
+app.include_router(email_router)
+app.include_router(internal_router)
 
 @app.on_event("startup")
 async def startup_event():

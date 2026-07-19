@@ -39,8 +39,6 @@ class AuthService:
             user_uuid = uuid.UUID(user.id)
             logger.info(f"Supabase Auth user created successfully. User ID: {user_uuid}")
 
-            # 2. Mirror the user profile locally in our PostgreSQL users table
-            # Check if user already exists locally (edge case)
             local_user = UserRepository.get_user_by_id(db, user_uuid)
             if not local_user:
                 UserRepository.create_user(db, user_id=user_uuid, email=email, full_name=full_name)

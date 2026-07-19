@@ -55,12 +55,8 @@ def get_current_user(
             
         user_uuid = UUID(user_id_str)
         
-        # Verify user exists in our local database
         user = UserRepository.get_user_by_id(db, user_uuid)
         if not user:
-            # If the user exists in Supabase Auth but was not mirrored in our local database,
-            # we automatically mirror them here to avoid breaking downstream requests.
-            # This is a robust fallback (ponytail approach: handle edge cases cleanly).
             full_name = payload.get("user_metadata", {}).get("full_name", email.split('@')[0])
             user = UserRepository.create_user(db, user_id=user_uuid, email=email, full_name=full_name)
             logger.info(f"User {user_uuid} auto-mirrored locally on auth check.")
