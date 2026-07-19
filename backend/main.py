@@ -11,12 +11,19 @@ from app.api.report import router as report_router
 from app.api.email import router as email_router
 from app.api.internal import router as internal_router
 
+from fastapi.staticfiles import StaticFiles
+import os
+
 app = FastAPI(
     title="AI Sustainability Consultant API",
     version="1.0.0",
     docs_url="/api/v1/docs",
     openapi_url="/api/v1/openapi.json"
 )
+
+# Ensure static folder exists for fallback PDF storage
+os.makedirs("static/reports", exist_ok=True)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(dashboard_router, prefix="/api/v1")
