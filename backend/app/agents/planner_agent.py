@@ -17,6 +17,8 @@ class PlannerAgent:
         business = shared_state.get("business", {})
         recommendations = shared_state.get("recommendations", [])
         financial = shared_state.get("financial_analysis", {})
+        goals = shared_state.get("goals", {})
+        timeline_months = int(goals.get("timeline_months", 12) or 12)
         
         global_inst = load_prompt("global_instruction.md")
         plan_inst = load_prompt("planner.md")
@@ -28,13 +30,19 @@ class PlannerAgent:
         - Size: {business.get("company_size")}
         - Sector: {business.get("industry")}
         
+        User Goals:
+        - Target reduction: {goals.get("reduction_goal", 20)}%
+        - Priority: {goals.get("priority", "ROI")}
+        - Target timeline: {timeline_months} months
+        - Notes: {goals.get("notes") or "None"}
+        
         Recommendations:
         {json.dumps(recommendations)}
         
-        Financial Parameters:
+        Financial Parameters (INR):
         {json.dumps(financial.get("financial_summary", {}))}
         
-        Structure these recommendations into chronological phases: 0-3 Months, 3-6 Months, 6-12 Months, 12+ Months. Output the structured JSON roadmap.
+        Structure these recommendations into chronological phases that fit within the user's {timeline_months}-month timeline. Prefer phases aligned to that overall duration. Output the structured JSON roadmap.
         """
         
         llm_response = await LLMService.call_model(prompt, system_instruction, json_mode=True)
@@ -70,7 +78,7 @@ class PlannerAgent:
                     {"phase": "3-6 Months", "tasks": tasks_3_6},
                     {"phase": "6-12 Months", "tasks": tasks_6_12}
                 ],
-                "overall_duration": "12 Months",
+                "overall_duration": f"{timeline_months} Months",
                 "confidence": 90
             }
             

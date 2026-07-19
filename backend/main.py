@@ -22,9 +22,16 @@ app = FastAPI(
     openapi_url="/api/v1/openapi.json"
 )
 
+# Local/dev origins (LAN IP included so phone/other devices on the network work)
+_cors_origins = {
+    settings.FRONTEND_URL,
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+}
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_URL, "http://localhost:3000"],
+    allow_origins=list(_cors_origins),
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+):\d+",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -119,6 +126,7 @@ async def health_check():
         "success": True,
         "data": {
             "status": "healthy",
-            "message": "AI Sustainability Consultant API is running"
+            "message": "AI Sustainability Consultant API is running",
+            "port_marker": "backend-8001-v2"
         }
     }

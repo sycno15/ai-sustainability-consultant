@@ -40,8 +40,18 @@ class AssessmentService:
                 sustainability_budget=payload.sustainability_budget
             )
             
-            # 4. Create analysis (sustainability workflow tracking)
-            analysis = WorkflowRepository.create_analysis(db=db, business_id=profile.id)
+            # 4. Create analysis with structured goals in shared_state
+            goals = {
+                "reduction_goal": float(payload.reduction_goal or 20),
+                "priority": payload.priority or "ROI",
+                "timeline_months": int(payload.timeline_months or 12),
+                "notes": payload.notes or "",
+            }
+            analysis = WorkflowRepository.create_analysis(
+                db=db,
+                business_id=profile.id,
+                shared_state={"goals": goals},
+            )
             
             return {
                 "assessment_id": analysis.id,

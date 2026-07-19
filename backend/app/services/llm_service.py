@@ -63,23 +63,115 @@ class LLMService:
     def _get_mock_response(system_instruction: str, prompt: str) -> str:
         # Match agent using unique role headers to prevent global_instruction conflicts
         sys_lower = system_instruction.lower()
+        prompt_lower = prompt.lower()
+
+        def detect_industry() -> str:
+            for name in (
+                "construction",
+                "technology",
+                "manufacturing",
+                "retail",
+                "hospitality",
+                "agriculture",
+                "logistics",
+                "warehousing",
+            ):
+                if f"sector: {name}" in prompt_lower or f"- sector: {name}" in prompt_lower:
+                    return name.title() if name != "technology" else "Technology"
+            return "Manufacturing"
+
+        industry = detect_industry()
+
+        industry_recs = {
+            "Construction": [
+                {
+                    "title": "Hybrid Construction Equipment",
+                    "description": "Replace diesel site equipment with hybrid or electric alternatives to cut site fuel emissions.",
+                    "priority": "HIGH",
+                    "expected_reduction_percent": 28.0,
+                    "sdg": [9, 13],
+                },
+                {
+                    "title": "Construction Waste Diversion",
+                    "description": "Segregate and divert demolition and site waste from landfill.",
+                    "priority": "HIGH",
+                    "expected_reduction_percent": 20.0,
+                    "sdg": [12],
+                },
+                {
+                    "title": "Temporary Site Solar Power",
+                    "description": "Deploy portable solar generators for site lighting and tools.",
+                    "priority": "MEDIUM",
+                    "expected_reduction_percent": 16.0,
+                    "sdg": [7],
+                },
+            ],
+            "Technology": [
+                {
+                    "title": "Green Cloud Migration",
+                    "description": "Migrate workloads to renewable-powered cloud regions and right-size compute.",
+                    "priority": "HIGH",
+                    "expected_reduction_percent": 22.0,
+                    "sdg": [7, 13],
+                },
+                {
+                    "title": "Office LED and Smart HVAC",
+                    "description": "Upgrade offices with LED lighting and smart HVAC scheduling.",
+                    "priority": "HIGH",
+                    "expected_reduction_percent": 14.0,
+                    "sdg": [12],
+                },
+                {
+                    "title": "E-Waste Recycling Program",
+                    "description": "Establish certified e-waste collection and responsible recycling.",
+                    "priority": "MEDIUM",
+                    "expected_reduction_percent": 18.0,
+                    "sdg": [12],
+                },
+            ],
+            "Manufacturing": [
+                {
+                    "title": "Rooftop Solar PV Installation",
+                    "description": "Install solar panels on factory roofs to generate clean electricity.",
+                    "priority": "HIGH",
+                    "expected_reduction_percent": 25.0,
+                    "sdg": [7, 13],
+                },
+                {
+                    "title": "VFD Installation on Motors",
+                    "description": "Install Variable Frequency Drives on heavy machinery electric motors.",
+                    "priority": "HIGH",
+                    "expected_reduction_percent": 15.0,
+                    "sdg": [9],
+                },
+                {
+                    "title": "Waste Heat Recovery System",
+                    "description": "Capture and reuse exhaust heat from boilers and ovens.",
+                    "priority": "MEDIUM",
+                    "expected_reduction_percent": 12.0,
+                    "sdg": [9],
+                },
+            ],
+        }
+        selected_recs = industry_recs.get(industry, industry_recs["Manufacturing"])
         
         if "carbon assessment agent" in sys_lower:
+            highest = "Diesel" if industry == "Construction" else "Electricity"
             return json.dumps({
                 "status": "SUCCESS",
                 "total_emissions": 35240.50,
                 "unit": "kgCO2e/year",
                 "breakdown": [
-                    {"activity": "Electricity", "emissions": 28400.00},
-                    {"activity": "Diesel", "emissions": 4820.50},
+                    {"activity": "Electricity", "emissions": 18400.00 if industry == "Construction" else 28400.00},
+                    {"activity": "Diesel", "emissions": 14820.50 if industry == "Construction" else 4820.50},
                     {"activity": "Petrol", "emissions": 1520.00},
                     {"activity": "Water", "emissions": 300.00},
                     {"activity": "Waste", "emissions": 200.00}
                 ],
-                "highest_source": "Electricity",
+                "highest_source": highest,
                 "observations": [
-                    "Grid electricity consumption accounts for over 80% of total operational greenhouse gas emissions.",
-                    "Diesel fuel usage for backup energy supply represents the second largest carbon contributor."
+                    f"For the {industry} sector, {highest.lower()} is the dominant emissions hotspot.",
+                    "Targeted reduction measures should prioritise this hotspot against the stated carbon goal."
                 ],
                 "confidence": 95
             })
@@ -87,29 +179,7 @@ class LLMService:
         elif "sustainability strategy consultant" in sys_lower:
             return json.dumps({
                 "status": "SUCCESS",
-                "recommendations": [
-                    {
-                        "title": "Solar Photovoltaic Installation",
-                        "description": "Install a 15kW rooftop solar PV system to generate clean energy and displace high-emission grid electricity usage.",
-                        "priority": "HIGH",
-                        "expected_reduction_percent": 30.0,
-                        "sdg": [7, 13]
-                    },
-                    {
-                        "title": "LED Lighting Retrofit",
-                        "description": "Replace all older fluorescent tube lights with energy-efficient smart LED fittings across the facility.",
-                        "priority": "HIGH",
-                        "expected_reduction_percent": 10.0,
-                        "sdg": [12, 13]
-                    },
-                    {
-                        "title": "Water Recycling System",
-                        "description": "Implement greywater filtration and rainwater harvesting systems to recycle water for washing and cooling utilities.",
-                        "priority": "MEDIUM",
-                        "expected_reduction_percent": 5.0,
-                        "sdg": [6, 12]
-                    }
-                ],
+                "recommendations": selected_recs,
                 "confidence": 93
             })
             
@@ -117,27 +187,28 @@ class LLMService:
             return json.dumps({
                 "status": "SUCCESS",
                 "financial_summary": {
-                    "total_cost": 25000.0,
-                    "annual_savings": 6500.0,
-                    "average_roi": 26.0,
-                    "payback_years": 3.8
+                    "total_cost": 1600000.0,
+                    "annual_savings": 400000.0,
+                    "average_roi": 25.0,
+                    "payback_years": 4.0,
+                    "currency": "INR"
                 },
                 "recommendation_costs": [
                     {
-                        "title": "Solar Photovoltaic Installation",
-                        "cost": 18000.0,
-                        "roi": 22.2,
+                        "title": selected_recs[0]["title"],
+                        "cost": 950000.0,
+                        "roi": 23.0,
                         "budget_fit": True
                     },
                     {
-                        "title": "LED Lighting Retrofit",
-                        "cost": 2000.0,
-                        "roi": 50.0,
+                        "title": selected_recs[1]["title"],
+                        "cost": 400000.0,
+                        "roi": 32.0,
                         "budget_fit": True
                     },
                     {
-                        "title": "Water Recycling System",
-                        "cost": 5000.0,
+                        "title": selected_recs[2]["title"],
+                        "cost": 250000.0,
                         "roi": 20.0,
                         "budget_fit": True
                     }
@@ -153,8 +224,8 @@ class LLMService:
                         "phase": "0-3 Months",
                         "tasks": [
                             {
-                                "title": "LED Lighting Retrofit",
-                                "reason": "Extremely low implementation barrier and immediate electricity cost reductions.",
+                                "title": selected_recs[1]["title"],
+                                "reason": "Quick-win aligned to user priority and near-term carbon reduction.",
                                 "estimated_duration": "2 weeks",
                                 "priority": "HIGH"
                             }
@@ -164,8 +235,8 @@ class LLMService:
                         "phase": "3-6 Months",
                         "tasks": [
                             {
-                                "title": "Water Recycling System",
-                                "reason": "Reduces municipal supply billing and improves operational resilience.",
+                                "title": selected_recs[2]["title"],
+                                "reason": "Medium effort measure that supports the stated reduction goal.",
                                 "estimated_duration": "1 month",
                                 "priority": "MEDIUM"
                             }
@@ -175,8 +246,8 @@ class LLMService:
                         "phase": "6-12 Months",
                         "tasks": [
                             {
-                                "title": "Solar Photovoltaic Installation",
-                                "reason": "Largest long-term carbon offset footprint; structured for mid-year capital spending budget.",
+                                "title": selected_recs[0]["title"],
+                                "reason": "Largest impact initiative scheduled within the target timeline.",
                                 "estimated_duration": "2 months",
                                 "priority": "HIGH"
                             }
@@ -198,24 +269,36 @@ class LLMService:
             return json.dumps({
                 "status": "SUCCESS",
                 "report": {
-                    "executive_summary": "This assessment outlines the operational carbon footprint and provides a strategic, financially structured sustainability roadmap. Transitioning to rooftop solar PV and smart LED retrofitting are identified as high-yield initiatives.",
-                    "carbon_analysis": "Organizational annual greenhouse gas footprint is calculated at 35.2 metric tons of CO2e. Grid electricity consumption represents 80.5% of total emissions.",
+                    "executive_summary": (
+                        f"This {industry} sustainability assessment prioritises measures that cut the main emissions hotspot "
+                        f"while staying within the INR sustainability budget and the stated reduction timeline."
+                    ),
+                    "carbon_analysis": (
+                        f"Annual greenhouse gas footprint for this {industry} profile is estimated from operational resource use. "
+                        "Hotspot-focused interventions are recommended first."
+                    ),
                     "recommendations": [
-                        "Solar Photovoltaic Installation (Expected 30% reduction, SDG 7)",
-                        "LED Lighting Retrofit (Expected 10% reduction, SDG 12)",
-                        "Water Recycling System (Expected 5% reduction, SDG 12)"
+                        f"{selected_recs[0]['title']} (Expected {selected_recs[0]['expected_reduction_percent']}% reduction)",
+                        f"{selected_recs[1]['title']} (Expected {selected_recs[1]['expected_reduction_percent']}% reduction)",
+                        f"{selected_recs[2]['title']} (Expected {selected_recs[2]['expected_reduction_percent']}% reduction)",
                     ],
-                    "financial_summary": "Total required capital spending is $25,000, yielding annual energy bill savings of $6,500 with an average ROI of 26% and payback period of 3.8 years.",
-                    "implementation_plan": "Phased 12-month implementation timeline starts with quick-win LED Retrofits (0-3 Months), Greywater filtration systems (3-6 Months), and rooftop Solar PV installation (6-12 Months).",
+                    "financial_summary": (
+                        "Total required capital spending is Rs. 16,00,000, yielding annual savings of Rs. 4,00,000 "
+                        "with an average ROI of 25% and payback period of 4.0 years (all figures in INR)."
+                    ),
+                    "implementation_plan": (
+                        f"Phased implementation for the {industry} roadmap starts with near-term quick wins, "
+                        "then medium measures, then the highest-impact capital project."
+                    ),
                     "sdg_mapping": [
                         {"goal_number": 7, "goal_name": "Affordable and Clean Energy"},
                         {"goal_number": 12, "goal_name": "Responsible Consumption and Production"},
                         {"goal_number": 13, "goal_name": "Climate Action"}
                     ],
                     "next_steps": [
-                        "Obtain local utility grid approvals for Solar PV.",
-                        "Gather supplier quotes for building-wide LED lighting retrofit.",
-                        "Establish employee awareness workshop on waste reduction."
+                        "Request INR vendor quotes for the top recommended measures.",
+                        "Align procurement with the selected priority and timeline.",
+                        "Track monthly emissions against the reduction goal."
                     ]
                 },
                 "confidence": 95

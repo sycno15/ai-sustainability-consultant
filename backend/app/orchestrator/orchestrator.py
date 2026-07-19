@@ -37,6 +37,14 @@ class Orchestrator:
             return
 
         # 2. Build initial shared context state
+        existing_state = analysis.shared_state if isinstance(analysis.shared_state, dict) else {}
+        goals = existing_state.get("goals", {
+            "reduction_goal": 20,
+            "priority": "ROI",
+            "timeline_months": 12,
+            "notes": "",
+        })
+
         shared_state = {
             "business": {
                 "id": str(profile.id),
@@ -54,6 +62,9 @@ class Orchestrator:
                 "annual_revenue": float(metrics.annual_revenue),
                 "sustainability_budget": float(metrics.sustainability_budget)
             },
+            "goals": goals,
+            "currency": "INR",
+            "currency_symbol": "Rs.",
             "carbon_analysis": {},
             "recommendations": [],
             "financial_analysis": {},

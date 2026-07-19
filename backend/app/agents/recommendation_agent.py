@@ -17,6 +17,7 @@ class RecommendationAgent:
         logger.info("Recommendation Agent: Starting selection...")
         business = shared_state.get("business", {})
         carbon = shared_state.get("carbon_analysis", {})
+        goals = shared_state.get("goals", {})
         
         industry = business.get("industry", "Manufacturing")
         
@@ -49,6 +50,13 @@ class RecommendationAgent:
         Business details:
         - Sector: {industry}
         - Company size: {business.get("company_size")}
+        - Description: {business.get("description")}
+        
+        User Goals:
+        - Target carbon reduction: {goals.get("reduction_goal", 20)}%
+        - Strategic priority: {goals.get("priority", "ROI")}
+        - Target timeline: {goals.get("timeline_months", 12)} months
+        - Notes/constraints: {goals.get("notes") or "None"}
         
         Emissions Profile:
         - Total: {carbon.get("total_emissions")} {carbon.get("unit")}
@@ -58,7 +66,7 @@ class RecommendationAgent:
         Available Sustainability Measures from Database:
         {json.dumps(measures_list)}
         
-        Select the best 3-7 recommendations from the measures list that address these carbon hotspots. Structure your output exactly according to the schema.
+        Select the best 3-7 recommendations from the measures list that address these carbon hotspots AND align with the user's reduction goal, priority, and timeline. Prefer measures from the same industry. Structure your output exactly according to the schema.
         """
         
         llm_response = await LLMService.call_model(prompt, system_instruction, json_mode=True)

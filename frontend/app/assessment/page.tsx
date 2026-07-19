@@ -87,9 +87,10 @@ export default function AssessmentWizardPage() {
     },
   });
 
-  const handleNext = async () => {
+  const handleNext = async (e?: React.MouseEvent) => {
+    e?.preventDefault();
     // Validate current step fields before proceeding
-    let fieldsToValidate: any[] = [];
+    let fieldsToValidate: (keyof WizardFormValues)[] = [];
     if (step === 1) {
       fieldsToValidate = ["business_name", "industry", "company_size", "description"];
     } else if (step === 2) {
@@ -106,34 +107,30 @@ export default function AssessmentWizardPage() {
 
     const isValid = await trigger(fieldsToValidate);
     if (isValid) {
-      setStep((s) => s + 1);
+      setStep((s) => Math.min(s + 1, 4));
     }
   };
 
-  const handlePrev = () => {
+  const handlePrev = (e?: React.MouseEvent) => {
+    e?.preventDefault();
     setStep((s) => Math.max(s - 1, 1));
   };
 
   const onSubmit = async (values: WizardFormValues) => {
+    // Guard: only allow submit from the Goals step
+    if (step !== 4) {
+      await handleNext();
+      return;
+    }
+
     setIsPending(true);
     setSubmitError(null);
     try {
-      // Compile goals details from step 4 into description text to respect DB schemas
-      const compiledDescription = `
-${values.description || "No description provided."}
-
-Goals & Targets:
-- Target Carbon Reduction: ${values.reduction_goal || 0}%
-- Strategic Priority: ${values.priority || "Balanced"}
-- Target Timeline: ${values.timeline_months || 12} Months
-- Implementation Notes: ${values.notes || "None"}
-`.trim();
-
       const payload: AssessmentPayload = {
         business_name: values.business_name,
         industry: values.industry,
         company_size: values.company_size,
-        description: compiledDescription,
+        description: values.description || "",
         electricity_usage: values.electricity_usage,
         diesel_usage: values.diesel_usage,
         petrol_usage: values.petrol_usage,
@@ -141,6 +138,10 @@ Goals & Targets:
         waste_generated: values.waste_generated,
         annual_revenue: values.annual_revenue,
         sustainability_budget: values.sustainability_budget,
+        reduction_goal: values.reduction_goal ?? 20,
+        priority: values.priority || "ROI",
+        timeline_months: values.timeline_months ?? 12,
+        notes: values.notes || "",
       };
 
       const result = await assessmentService.createAssessment(token || "", payload);
@@ -149,6 +150,16 @@ Goals & Targets:
       setSubmitError(err.message || "Failed to create assessment. Please check your connection.");
     } finally {
       setIsPending(false);
+    }
+  };
+
+  const blockEnterSubmit = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    // Prevent Enter from skipping the Goals step / auto-submitting mid-wizard
+    if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") {
+      e.preventDefault();
+      if (step < 4) {
+        void handleNext();
+      }
     }
   };
 
@@ -222,7 +233,7 @@ Goals & Targets:
             </div>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} onKeyDown={blockEnterSubmit} className="space-y-6">
             {/* STEP 1: BUSINESS PROFILE */}
             {step === 1 && (
               <div className="space-y-4">
@@ -254,6 +265,9 @@ Goals & Targets:
                     <option value="Retail">Retail</option>
                     <option value="Hospitality">Hospitality</option>
                     <option value="Construction">Construction</option>
+                    <option value="Agriculture">Agriculture</option>
+                    <option value="Logistics">Logistics</option>
+                    <option value="Warehousing">Warehousing</option>
                   </select>
                   {errors.industry && (
                     <p className="mt-1 text-xs text-red-600">{errors.industry.message}</p>
@@ -372,7 +386,7 @@ Goals & Targets:
                 </h3>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">Annual Revenue ($)</label>
+                  <label className="block text-sm font-semibold text-slate-700">Annual Revenue (Rs. / INR)</label>
                   <input
                     type="number"
                     min="0"
@@ -385,7 +399,7 @@ Goals & Targets:
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">Available Sustainability Budget ($)</label>
+                  <label className="block text-sm font-semibold text-slate-700">Available Sustainability Budget (Rs. / INR)</label>
                   <input
                     type="number"
                     min="0"
@@ -492,7 +506,8 @@ Goals & Targets:
                 </Button>
               ) : (
                 <Button
-                  type="submit"
+                  type="button"
+                  onClick={handleSubmit(onSubmit)}
                   disabled={isPending}
                   className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition"
                 >

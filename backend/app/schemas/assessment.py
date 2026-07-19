@@ -12,7 +12,7 @@ class AssessmentCreate(BaseModel):
     business_name: str = Field(..., min_length=1, description="Business name is required")
     industry: str = Field(..., min_length=1, description="Industry is required")
     company_size: CompanySizeEnum = Field(..., description="Company size must be Small, Medium, or Large")
-    description: Optional[str] = Field(None, max_length=500)
+    description: Optional[str] = Field(None, max_length=1000)
     
     electricity_usage: float = Field(0.0, ge=0.0, description="Electricity usage must be a positive number")
     diesel_usage: float = Field(0.0, ge=0.0, description="Diesel usage must be a positive number")
@@ -22,6 +22,11 @@ class AssessmentCreate(BaseModel):
     
     annual_revenue: float = Field(0.0, ge=0.0, description="Annual revenue must be a positive number")
     sustainability_budget: float = Field(0.0, ge=0.0, description="Sustainability budget must be a positive number")
+
+    reduction_goal: Optional[float] = Field(20.0, ge=0.0, le=100.0)
+    priority: Optional[str] = Field("ROI")
+    timeline_months: Optional[int] = Field(12, ge=1)
+    notes: Optional[str] = Field(None, max_length=500)
 
 class AssessmentResponseData(BaseModel):
     assessment_id: UUID

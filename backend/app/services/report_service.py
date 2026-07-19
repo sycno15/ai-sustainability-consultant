@@ -10,6 +10,17 @@ import httpx
 
 class ReportService:
     @staticmethod
+    def _serialize_report(report) -> Dict[str, Any]:
+        return {
+            "id": report.id,
+            "analysis_id": report.analysis_id,
+            "report_json": report.report_json,
+            "pdf_url": report.pdf_url,
+            "approved": report.approved,
+            "overall_score": float(report.overall_score) if report.overall_score is not None else None
+        }
+
+    @staticmethod
     def get_report(db: Session, user_id: UUID, report_id: UUID) -> Dict[str, Any]:
         report = ReportRepository.get_report_by_id(db, report_id)
         if not report or not report.analysis or not report.analysis.business:
@@ -24,14 +35,24 @@ class ReportService:
                 detail="Access denied to this report"
             )
             
-        return {
-            "id": report.id,
-            "analysis_id": report.analysis_id,
-            "report_json": report.report_json,
-            "pdf_url": report.pdf_url,
-            "approved": report.approved,
-            "overall_score": float(report.overall_score) if report.overall_score is not None else None
-        }
+        return ReportService._serialize_report(report)
+
+    @staticmethod
+    def get_report_by_analysis(db: Session, user_id: UUID, analysis_id: UUID) -> Dict[str, Any]:
+        report = ReportRepository.get_report_by_analysis_id(db, analysis_id)
+        if not report or not report.analysis or not report.analysis.business:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Report not found for this analysis"
+            )
+
+        if report.analysis.business.user_id != user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied to this report"
+            )
+
+        return ReportService._serialize_report(report)
 
     @staticmethod
     def submit_feedback(

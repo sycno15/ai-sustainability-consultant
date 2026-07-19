@@ -10,6 +10,18 @@ from uuid import UUID
 
 router = APIRouter(prefix="/reports", tags=["Report"])
 
+@router.get("/by-analysis/{analysis_id}", response_model=None)
+async def get_report_by_analysis(
+    analysis_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    result = ReportService.get_report_by_analysis(db, current_user.id, analysis_id)
+    return {
+        "success": True,
+        "data": result
+    }
+
 @router.get("/{id}", response_model=None)
 async def get_report(
     id: UUID,

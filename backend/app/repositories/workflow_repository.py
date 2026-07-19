@@ -13,12 +13,12 @@ class WorkflowRepository:
         return db.query(Analysis).filter(Analysis.business_id == business_id).order_by(Analysis.id.desc()).first()
 
     @staticmethod
-    def create_analysis(db: Session, business_id: UUID) -> Analysis:
+    def create_analysis(db: Session, business_id: UUID, shared_state: Optional[dict] = None) -> Analysis:
         analysis = Analysis(
             business_id=business_id,
             workflow_status="Draft",
             retry_count=0,
-            shared_state={}
+            shared_state=shared_state or {}
         )
         db.add(analysis)
         db.commit()

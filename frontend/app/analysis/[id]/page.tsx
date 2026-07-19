@@ -114,7 +114,11 @@ export default function AnalysisProgressPage() {
         if (pollingRef.current) clearInterval(pollingRef.current);
         // Wait 2 seconds so the user sees the 100% completion state, then redirect to draft report review
         setTimeout(() => {
-          router.push(`/draft/${id}`);
+          if (stats.report_id) {
+            router.push(`/draft/${stats.report_id}`);
+          } else {
+            setErrorMsg("Analysis completed, but the report draft is not ready yet. Open it from the dashboard.");
+          }
         }, 2000);
       } else if (stats.status === "FAILED") {
         if (pollingRef.current) clearInterval(pollingRef.current);

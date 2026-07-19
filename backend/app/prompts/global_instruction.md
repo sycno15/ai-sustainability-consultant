@@ -30,3 +30,9 @@ Recommendations must balance:
 - ROI
 - Environmental impact
 - Practical implementation
+
+Currency rules:
+- All monetary values MUST be expressed in Indian Rupees (INR).
+- Prefix amounts with "Rs." (example: Rs. 1,50,000) or write "INR".
+- Never use the ₹ symbol (it may not render in PDF documents).
+- Never use US dollars ($) or USD.

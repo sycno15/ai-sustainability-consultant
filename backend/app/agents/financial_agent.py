@@ -17,6 +17,8 @@ class FinancialAgent:
         logger.info("Financial Agent: Starting valuation...")
         recommendations = shared_state.get("recommendations", [])
         metrics = shared_state.get("metrics", {})
+        goals = shared_state.get("goals", {})
+        currency_symbol = shared_state.get("currency_symbol", "Rs.")
         
         budget = float(metrics.get("sustainability_budget", 0.0))
         revenue = float(metrics.get("annual_revenue", 0.0))
@@ -35,9 +37,9 @@ class FinancialAgent:
                 SustainabilityMeasure.title.ilike(title)
             ).first()
             
-            cost = 2500.0 # fallback
+            cost = 250000.0 # INR fallback
             roi = 20.0
-            savings = 500.0
+            savings = 50000.0
             payback = 5.0
             
             if measure:
@@ -74,18 +76,23 @@ class FinancialAgent:
         system_instruction = f"{global_inst}\n\n{fin_inst}"
         
         prompt = f"""
-        Business Metrics:
-        - Annual Revenue: ${revenue:.2f}
-        - Sustainability Budget: ${budget:.2f}
+        Business Metrics (all amounts in Indian Rupees / INR):
+        - Annual Revenue: {currency_symbol}{revenue:,.2f}
+        - Sustainability Budget: {currency_symbol}{budget:,.2f}
         
-        Calculated Financials:
-        - Total Estimated Cost: ${total_cost:.2f}
-        - Total Annual Savings: ${total_savings:.2f}
+        User Goals:
+        - Target reduction: {goals.get("reduction_goal", 20)}%
+        - Priority: {goals.get("priority", "ROI")}
+        - Timeline: {goals.get("timeline_months", 12)} months
+        
+        Calculated Financials (INR):
+        - Total Estimated Cost: {currency_symbol}{total_cost:,.2f}
+        - Total Annual Savings: {currency_symbol}{total_savings:,.2f}
         - Average ROI: {avg_roi:.2f}%
         - Payback Period: {payback_years:.2f} years
         - Recommendation Costs: {json.dumps(recommendation_costs)}
         
-        Analyze these figures against the available budget. Generate observations on budget fits and project feasibility. Return the structured JSON matching the output schema.
+        Analyze these figures against the available budget and user priority. Express every money amount in INR using "Rs." (never the ₹ symbol). Return the structured JSON matching the output schema.
         """
         
         llm_response = await LLMService.call_model(prompt, system_instruction, json_mode=True)
@@ -97,7 +104,8 @@ class FinancialAgent:
                 "total_cost": round(total_cost, 2),
                 "annual_savings": round(total_savings, 2),
                 "average_roi": round(avg_roi, 2),
-                "payback_years": round(payback_years, 2)
+                "payback_years": round(payback_years, 2),
+                "currency": "INR"
             }
             result["recommendation_costs"] = recommendation_costs
             result["status"] = "SUCCESS"
@@ -109,7 +117,8 @@ class FinancialAgent:
                     "total_cost": round(total_cost, 2),
                     "annual_savings": round(total_savings, 2),
                     "average_roi": round(avg_roi, 2),
-                    "payback_years": round(payback_years, 2)
+                    "payback_years": round(payback_years, 2),
+                    "currency": "INR"
                 },
                 "recommendation_costs": recommendation_costs,
                 "confidence": 90

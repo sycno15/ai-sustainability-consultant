@@ -14,3 +14,9 @@ id,industry,title,description,expected_reduction
 13,Warehousing,Electric Forklift Fleet,Replace propane or diesel forklifts with electric alternatives,30
 14,Retail,Zero Plastic Packaging,Switch to biodegradable and paper-based packaging materials,25
 15,Hospitality,Food Waste Composting,Implement food waste segregation and local composting programs,35
+16,Technology,Green Cloud Migration,Migrate workloads to renewable-powered cloud regions and right-size compute,22
+17,Technology,Office LED and Smart HVAC,Upgrade offices with LED lighting and smart HVAC scheduling,14
+18,Technology,E-Waste Recycling Program,Establish certified e-waste collection and responsible recycling,18
+19,Construction,Hybrid Construction Equipment,Replace diesel site equipment with hybrid or electric alternatives,28
+20,Construction,Construction Waste Diversion,Segregate and divert demolition and site waste from landfill,20
+21,Construction,Temporary Site Solar Power,Deploy portable solar generators for site lighting and tools,16

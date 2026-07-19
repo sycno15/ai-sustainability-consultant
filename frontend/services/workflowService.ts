@@ -5,6 +5,7 @@ export interface WorkflowStatus {
   current_agent: string | null;
   progress: number;
   retry_count: number;
+  report_id?: string | null;
 }
 
 export interface TimelineItem {

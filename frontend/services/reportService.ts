@@ -25,6 +25,21 @@ export const reportService = {
     return data.data;
   },
 
+  async getReportByAnalysis(token: string, analysisId: string): Promise<ReportContent> {
+    const res = await fetch(`${API_BASE}/reports/by-analysis/${analysisId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error?.message || "Failed to load report for analysis");
+    }
+    return data.data;
+  },
+
   async submitFeedback(token: string, id: string, feedback: string): Promise<{ status: string }> {
     const res = await fetch(`${API_BASE}/reports/${id}/feedback`, {
       method: "POST",

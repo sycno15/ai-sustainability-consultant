@@ -46,11 +46,19 @@ class WorkflowService:
         else:
             progress = 10
             
+        report_id = None
+        if status_str in ("COMPLETED", "APPROVED"):
+            from app.repositories.report_repository import ReportRepository
+            report = ReportRepository.get_report_by_analysis_id(db, analysis_id)
+            if report:
+                report_id = str(report.id)
+
         return {
             "status": status_str,
             "current_agent": analysis.current_agent,
             "progress": progress,
-            "retry_count": analysis.retry_count
+            "retry_count": analysis.retry_count,
+            "report_id": report_id,
         }
 
     @staticmethod

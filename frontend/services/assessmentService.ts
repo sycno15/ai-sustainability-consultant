@@ -14,6 +14,11 @@ export interface AssessmentPayload {
   
   annual_revenue: number;
   sustainability_budget: number;
+
+  reduction_goal?: number;
+  priority?: string;
+  timeline_months?: number;
+  notes?: string;
 }
 
 export interface AssessmentResponse {

@@ -174,8 +174,13 @@ def seed_database():
         industries_csv = os.path.join(seed_folder, "industries.csv")
         industries_rows = get_csv_rows(industries_csv)
         for row in industries_rows:
-            if not db.query(Industry).filter(Industry.id == int(row['id'])).first():
+            existing = db.query(Industry).filter(
+                (Industry.id == int(row['id'])) | (Industry.name.ilike(row['name']))
+            ).first()
+            if not existing:
                 db.add(Industry(id=int(row['id']), name=row['name'], description=row['description']))
+            elif existing.description != row['description']:
+                existing.description = row['description']
         db.commit()
         summary["csv_imported"] += 1
         summary["rows_imported"] += len(industries_rows)
@@ -258,12 +263,17 @@ def seed_database():
         benchmarks_csv = os.path.join(seed_folder, "industry_benchmarks.csv")
         benchmarks_rows = get_csv_rows(benchmarks_csv)
         for row in benchmarks_rows:
-            if not db.query(IndustryBenchmark).filter(IndustryBenchmark.id == int(row['id'])).first():
+            existing = db.query(IndustryBenchmark).filter(
+                (IndustryBenchmark.id == int(row['id'])) | (IndustryBenchmark.industry.ilike(row['industry']))
+            ).first()
+            if not existing:
                 db.add(IndustryBenchmark(
                     id=int(row['id']),
                     industry=row['industry'],
                     benchmark_emissions=float(row['benchmark_emissions'])
                 ))
+            else:
+                existing.benchmark_emissions = float(row['benchmark_emissions'])
         db.commit()
         summary["csv_imported"] += 1
         summary["rows_imported"] += len(benchmarks_rows)

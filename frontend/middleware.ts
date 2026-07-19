@@ -6,7 +6,7 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Define route lists
-  const protectedRoutes = ["/dashboard", "/assessment", "/analysis", "/settings"];
+  const protectedRoutes = ["/dashboard", "/assessment", "/analysis", "/draft", "/report", "/settings"];
   const authRoutes = ["/login", "/register", "/forgot-password"];
 
   // Check if pathname starts with any of the routes
@@ -36,6 +36,8 @@ export const config = {
     "/dashboard/:path*",
     "/assessment/:path*",
     "/analysis/:path*",
+    "/draft/:path*",
+    "/report/:path*",
     "/settings/:path*",
     "/login",
     "/register",
