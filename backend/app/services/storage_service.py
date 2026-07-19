@@ -1,4 +1,5 @@
 from app.config import settings, logger
+# pyrefly: ignore [missing-import]
 from supabase import create_client, Client
 import os
 
