@@ -36,17 +36,17 @@ This file tracks the development progress of the AI Sustainability Consultant pr
   - Verified backend auth endpoints and DB mirroring using a custom integration script calling the live Supabase project
   - Built frontend using `npm run build` to confirm zero TypeScript compile or Next.js build errors
 
+### Phase 4: Backend APIs (Completed)
+- [x] Created database Repository layer (`BusinessRepository`, `WorkflowRepository`, `ReportRepository`, `EmailRepository`)
+- [x] Created Pydantic validation schemas for all endpoints
+- [x] Created Service layer logic for dashboard stats, assessments creation/deletion, workflow status, report actions, and email delivery
+- [x] Implemented API controllers/routers: Dashboard, Assessment, Workflow, Report, Email, Internal AI triggers
+- [x] Registered all routes in `backend/main.py`
+- [x] Verified all endpoints using a custom integration test suite utilizing `fastapi.testclient` and live Supabase PostgreSQL connection
+
 ---
 
 ## 📋 Pending Tasks & Next Steps
-
-### Phase 4: Backend APIs (Upcoming)
-- [ ] Implement Dashboard APIs (`GET /dashboard`, `GET /dashboard/reports`) to return stats and report lists
-- [ ] Implement Assessment APIs (`POST /assessments`, `GET /assessments/{id}`, `DELETE /assessments/{id}`)
-- [ ] Implement Workflow APIs (`POST /analysis/{id}/start`, `GET /analysis/{id}/status`, `GET /analysis/{id}/timeline`)
-- [ ] Implement Report APIs (`GET /reports/{id}`, `POST /reports/{id}/feedback`, `POST /reports/{id}/approve`, `GET /reports/{id}/pdf`, `GET /reports/{id}/json`)
-- [ ] Implement Email APIs (`POST /reports/{id}/send-email`, `GET /reports/{id}/email-status`)
-- [ ] Implement Internal AI APIs (endpoints for the Orchestrator to run individual agents: Carbon, Recommendation, Financial, Planner, Critic, Report, Notification)
 
 ### Phase 5: Frontend Foundation & Dashboard UI (Upcoming)
 - [ ] Build Frontend Dashboard UI (cards, score tracker, reports table, activity timeline)

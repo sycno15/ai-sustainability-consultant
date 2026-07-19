@@ -4,6 +4,12 @@ from fastapi.responses import JSONResponse
 from app.config import settings, logger
 
 from app.api.auth import router as auth_router
+from app.api.dashboard import router as dashboard_router
+from app.api.assessment import router as assessment_router
+from app.api.workflow import router as workflow_router
+from app.api.report import router as report_router
+from app.api.email import router as email_router
+from app.api.internal import router as internal_router
 
 app = FastAPI(
     title="AI Sustainability Consultant API",
@@ -13,6 +19,12 @@ app = FastAPI(
 )
 
 app.include_router(auth_router, prefix="/api/v1")
+app.include_router(dashboard_router, prefix="/api/v1")
+app.include_router(assessment_router, prefix="/api/v1")
+app.include_router(workflow_router, prefix="/api/v1")
+app.include_router(report_router, prefix="/api/v1")
+app.include_router(email_router, prefix="/api/v1")
+app.include_router(internal_router, prefix="/api/v1")
 
 @app.on_event("startup")
 async def startup_event():
