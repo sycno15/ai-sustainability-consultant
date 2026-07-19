@@ -48,8 +48,22 @@ This file tracks the development progress of the AI Sustainability Consultant pr
 
 ## 📋 Pending Tasks & Next Steps
 
-### Phase 5: Frontend Foundation & Dashboard UI (Upcoming)
-- [ ] Build Frontend Dashboard UI (cards, score tracker, reports table, activity timeline)
-- [ ] Build Frontend Assessment Wizard (multi-step form: Business -> Resources -> Financial -> Goals)
-- [ ] Connect dashboard, workflow progress, report pages, and email status to backend APIs
+### Phase 5: Frontend Foundation & Dashboard UI (Completed)
+- [x] Created API service layers (`dashboardService`, `assessmentService`, `workflowService`, `reportService`, `emailService`)
+- [x] Built Dashboard UI page with Welcome Banner, stats overview cards, and report list table
+- [x] Built paginated ReportsTable component with loading skeletons and empty states
+- [x] Built Assessment Wizard page with 4 steps validation using Zod and React Hook Form
+- [x] Built Workflow Tracker page with active agent progress bar, status badges, and chronological timeline logs
+- [x] Verified client page routing and Next.js production builds
+
+---
+
+## 📋 Pending Tasks & Next Steps
+
+### Phase 6: AI Agent Orchestration & LLM Service (Upcoming)
+- [ ] Create `llm_service.py` to connect OpenRouter and handle JSON responses
+- [ ] Load agent prompt markdown templates dynamically from `backend/app/prompts/`
+- [ ] Implement `orchestrator.py` to run multi-agent execution pipeline
+- [ ] Implement individual agent modules (Carbon, Recommendation, Financial, Planner, Critic, Report)
+- [ ] Log agent tool durations and statuses to `tool_logs` table
 

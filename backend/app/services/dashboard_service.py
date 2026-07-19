@@ -70,6 +70,7 @@ class DashboardService:
                 "industry": industry,
                 "overall_score": float(report.overall_score) if report.overall_score is not None else None,
                 "approved": report.approved,
-                "created_at": datetime.utcnow() # fallback
+                "created_at": datetime.utcnow(), # fallback
+                "pdf_url": report.pdf_url
             })
         return reports_list
