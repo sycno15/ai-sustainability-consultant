@@ -27,11 +27,15 @@ _cors_origins = {
     settings.FRONTEND_URL,
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://ai-sustainability-consultant.vercel.app",
 }
 app.add_middleware(
     CORSMiddleware,
     allow_origins=list(_cors_origins),
-    allow_origin_regex=r"http://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+):\d+",
+    allow_origin_regex = (
+    r"https://ai-sustainability-consultant\.vercel\.app"
+    r"|http://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+):\d+"
+)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
