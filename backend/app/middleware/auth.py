@@ -1,4 +1,5 @@
 import jwt
+from jwt import PyJWKClient
 from fastapi import Request, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.config import settings, logger
@@ -10,20 +11,39 @@ from uuid import UUID
 # We use HTTPBearer to extract the Authorization header
 security = HTTPBearer()
 
+# JWKS client for ES256 verification (caches keys automatically)
+_jwks_url = f"{settings.SUPABASE_URL}/auth/v1/.well-known/jwks.json"
+_jwks_client = PyJWKClient(_jwks_url, cache_keys=True)
+
+def _decode_token(token: str) -> dict:
+    """Decode a Supabase JWT, supporting both HS256 (legacy) and ES256 (current)."""
+    header = jwt.get_unverified_header(token)
+    alg = header.get("alg", "HS256")
+
+    if alg == "HS256":
+        return jwt.decode(
+            token,
+            settings.JWT_SECRET,
+            algorithms=["HS256"],
+            audience="authenticated",
+        )
+
+    # ES256 — resolve signing key from Supabase JWKS
+    signing_key = _jwks_client.get_signing_key_from_jwt(token)
+    return jwt.decode(
+        token,
+        signing_key.key,
+        algorithms=["ES256"],
+        audience="authenticated",
+    )
+
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
 ):
     token = credentials.credentials
     try:
-        # Decode the token using the Supabase JWT secret
-        # Supabase JWTs are signed with HS256 algorithm and have 'authenticated' audience
-        payload = jwt.decode(
-            token,
-            settings.JWT_SECRET,
-            algorithms=["HS256"],
-            audience="authenticated"
-        )
+        payload = _decode_token(token)
         
         user_id_str = payload.get("sub")
         email = payload.get("email")

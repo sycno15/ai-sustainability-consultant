@@ -1,4 +1,5 @@
-from supabase import create_client, Client
+import httpx
+from supabase import create_client, Client, ClientOptions
 from app.config import settings, logger
 from app.repositories.user_repository import UserRepository
 from sqlalchemy.orm import Session
@@ -6,27 +7,31 @@ import uuid
 
 class AuthService:
     def __init__(self):
+        # We use a custom httpx client to disable HTTP/2 and increase timeout to 60.0s to avoid timeouts
+        http_client = httpx.Client(timeout=60.0, http2=False)
+        options = ClientOptions(httpx_client=http_client)
         # We use the Service Role Key to bypass RLS for administrative user creation,
         # but the client session JWT is verified for user endpoints.
-        self.supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+        self.supabase: Client = create_client(
+            settings.SUPABASE_URL,
+            settings.SUPABASE_SERVICE_ROLE_KEY,
+            options=options
+        )
 
     def register(self, email: str, password: str, full_name: str, db: Session):
         logger.info(f"Attempting to register user: {email}")
         try:
-            # 1. Sign up user in Supabase GoTrue Auth
-            response = self.supabase.auth.sign_up({
+            # 1. Create user in Supabase GoTrue Auth and confirm email automatically
+            response = self.supabase.auth.admin.create_user({
                 "email": email,
                 "password": password,
-                "options": {
-                    "data": {
-                        "full_name": full_name
-                    }
+                "email_confirm": True,
+                "user_metadata": {
+                    "full_name": full_name
                 }
             })
             
             # The response contains the user object.
-            # Depending on the Supabase configuration, if email confirmation is enabled,
-            # session might be null but user details are returned.
             user = response.user
             if not user:
                 raise Exception("Supabase Auth registration returned an empty user response.")
@@ -74,7 +79,9 @@ class AuthService:
         try:
             # GoTrue client requires the user token to perform logout.
             # We initialize a client with the user's specific JWT to sign out.
-            user_client = create_client(settings.SUPABASE_URL, settings.SUPABASE_ANON_KEY)
+            http_client = httpx.Client(timeout=60.0, http2=False)
+            options = ClientOptions(httpx_client=http_client)
+            user_client = create_client(settings.SUPABASE_URL, settings.SUPABASE_ANON_KEY, options=options)
             user_client.postgrest.auth(token)
             user_client.auth.sign_out(token)
             logger.info("Session signed out successfully.")
