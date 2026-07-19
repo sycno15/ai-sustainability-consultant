@@ -125,7 +125,7 @@ def main():
             print(f"Error checking status: {e}")
             
     if completed:
-        print("\n🎉 Multi-agent workflow completed successfully!")
+        print("\nMulti-agent workflow completed successfully!")
         
         # Get timeline logs
         try:
@@ -145,17 +145,17 @@ def main():
         print("\nFetching generated sustainability report...")
         try:
             # Let's get dashboard stats or reports
-            dash_resp = requests.get(f"{BASE_URL}/dashboard/stats", headers=headers)
+            dash_resp = requests.get(f"{BASE_URL}/dashboard", headers=headers)
             dash_resp.raise_for_status()
             dash_data = dash_resp.json()["data"]
             print(f"Dashboard Stats: {dash_data}")
             
-            report_resp = requests.get(f"{BASE_URL}/reports", headers=headers)
+            report_resp = requests.get(f"{BASE_URL}/dashboard/reports", headers=headers)
             report_resp.raise_for_status()
             reports_list = report_resp.json()["data"]
             if reports_list:
                 latest_report = reports_list[0]
-                print(f"Generated Report: {latest_report['report_name']}")
+                print(f"Generated Report ID: {latest_report['id']} for {latest_report['business_name']}")
                 print(f"PDF URL: {latest_report.get('pdf_url')}")
             else:
                 print("No reports found in report list.")
@@ -163,10 +163,10 @@ def main():
             print(f"Error fetching reports: {e}")
             
     elif failed:
-        print("\n❌ Workflow failed.")
+        print("\nWorkflow failed.")
         sys.exit(1)
     else:
-        print("\n⏳ Workflow monitoring timed out.")
+        print("\nWorkflow monitoring timed out.")
         sys.exit(1)
 
 if __name__ == "__main__":

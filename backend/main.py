@@ -1,6 +1,7 @@
 from fastapi.exceptions import RequestValidationError
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings, logger
 
 from app.api.auth import router as auth_router
@@ -19,6 +20,14 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/api/v1/docs",
     openapi_url="/api/v1/openapi.json"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[settings.FRONTEND_URL, "http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Ensure static folder exists for fallback PDF storage

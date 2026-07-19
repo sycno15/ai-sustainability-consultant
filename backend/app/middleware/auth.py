@@ -26,6 +26,7 @@ def _decode_token(token: str) -> dict:
             settings.JWT_SECRET,
             algorithms=["HS256"],
             audience="authenticated",
+            leeway=60,
         )
 
     # ES256 — resolve signing key from Supabase JWKS
@@ -35,6 +36,7 @@ def _decode_token(token: str) -> dict:
         signing_key.key,
         algorithms=["ES256"],
         audience="authenticated",
+        leeway=60,
     )
 
 def get_current_user(
