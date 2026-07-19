@@ -122,7 +122,7 @@ The backend exposes routes for:
 
 ## Deployment
 
-This repository includes a Render configuration in render.yaml for deploying the backend service. The frontend can be deployed separately on Vercel or another hosting provider.
+This repository includes a Render configuration in render.yaml for deploying the backend service. The frontend is deployed separately on Vercel and the Link to it is: ai-sustainability-consultant.vercel.app
 
 ## Notes
 
