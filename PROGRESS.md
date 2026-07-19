@@ -58,12 +58,21 @@ This file tracks the development progress of the AI Sustainability Consultant pr
 
 ---
 
+### Phase 6: AI Agent Orchestration & LLM Service (Completed)
+- [x] Created `llm_service.py` with mock fallbacks for local execution
+- [x] Created prompt markdown files (`carbon.md`, `recommendation.md`, `financial.md`, `planner.md`, `critic.md`, `report.md`, `global_instruction.md`)
+- [x] Implemented multi-agent classes with deterministic calculations matching DB factors and technology costs
+- [x] Developed the state-machine `Orchestrator` engine managing agent transitions, retry limits, and Critic revision reruns
+- [x] Logged tool execution metric details inside database `tool_logs` table
+- [x] Verified full orchestrator loop end-to-end using automated FastAPI `TestClient` scripts
+
+---
+
 ## 📋 Pending Tasks & Next Steps
 
-### Phase 6: AI Agent Orchestration & LLM Service (Upcoming)
-- [ ] Create `llm_service.py` to connect OpenRouter and handle JSON responses
-- [ ] Load agent prompt markdown templates dynamically from `backend/app/prompts/`
-- [ ] Implement `orchestrator.py` to run multi-agent execution pipeline
-- [ ] Implement individual agent modules (Carbon, Recommendation, Financial, Planner, Critic, Report)
-- [ ] Log agent tool durations and statuses to `tool_logs` table
+### Phase 7: PDF Generation & Resend Email Integration (Upcoming)
+- [ ] Implement PDF generator using WeasyPrint or ReportLab in `report_service.py`
+- [ ] Connect report approval to PDF generation and upload to Supabase Storage bucket
+- [ ] Integrate Resend transactional email service to dispatch report PDF to the client
+- [ ] Implement GET/POST endpoints for report feedback and delivery status checks
 

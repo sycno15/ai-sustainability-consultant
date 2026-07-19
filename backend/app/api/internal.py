@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from app.utils.db import get_db
 from app.schemas.internal import InternalOrchestratorStart, InternalAgentRun
+from app.orchestrator.orchestrator import Orchestrator
 from app.config import logger
 from uuid import UUID
 
@@ -19,16 +20,16 @@ def verify_internal_token(x_internal_token: str = Header(..., alias="X-Internal-
 @router.post("/orchestrator/start", dependencies=[Depends(verify_internal_token)])
 async def start_orchestrator(
     payload: InternalOrchestratorStart,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
-    logger.info(f"[Internal] Starting multi-agent orchestrator for analysis ID: {payload.analysis_id}")
-    # Stubbed orchestrator run: we will implement the actual multi-agent execution pipeline in Epic 14 (Phase 6).
-    # For now, log the event and return running status.
+    logger.info(f"[Internal] Queueing orchestrator background task for analysis ID: {payload.analysis_id}")
+    background_tasks.add_task(Orchestrator.run_workflow, db, payload.analysis_id)
     return {
         "success": True,
         "data": {
             "status": "RUNNING",
-            "message": "Orchestrator started workflow execution."
+            "message": "Orchestrator queued workflow execution."
         }
     }
 

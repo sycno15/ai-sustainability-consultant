@@ -123,24 +123,14 @@ class WorkflowService:
 
     @staticmethod
     async def _run_orchestrator_bg(analysis_id: UUID):
-        # We invoke the internal endpoint via HTTP client to trigger the orchestrator
-        # We need the service token for authentication. For now, since it is internal,
-        # we configure a mock/secure token.
-        token = "internal_secret_token"
-        headers = {"X-Internal-Token": token}
-        url = f"{settings.BACKEND_URL}/api/v1/internal/orchestrator/start"
+        from app.orchestrator.orchestrator import Orchestrator
+        from app.utils.db import SessionLocal
         
-        logger.info(f"Triggering background orchestrator for analysis: {analysis_id}")
+        logger.info(f"Triggering background orchestrator directly for analysis: {analysis_id}")
+        db = SessionLocal()
         try:
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                response = await client.post(
-                    url,
-                    json={"analysis_id": str(analysis_id)},
-                    headers=headers
-                )
-                if response.status_code != 200:
-                    logger.error(f"Failed to start orchestrator: {response.text}")
-                else:
-                    logger.info(f"Orchestrator triggered successfully for analysis {analysis_id}")
+            await Orchestrator.run_workflow(db, analysis_id)
         except Exception as e:
-            logger.error(f"Error calling internal orchestrator API: {str(e)}")
+            logger.error(f"Error running orchestrator directly: {str(e)}")
+        finally:
+            db.close()
