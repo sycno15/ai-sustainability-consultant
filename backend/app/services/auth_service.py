@@ -55,7 +55,14 @@ class AuthService:
     def login(self, email: str, password: str):
         logger.info(f"Attempting to login user: {email}")
         try:
-            response = self.supabase.auth.sign_in_with_password({
+            http_client = httpx.Client(timeout=60.0, http2=False)
+            options = ClientOptions(httpx_client=http_client)
+            client = create_client(
+                settings.SUPABASE_URL,
+                settings.SUPABASE_ANON_KEY,
+                options=options
+            )
+            response = client.auth.sign_in_with_password({
                 "email": email,
                 "password": password
             })
@@ -94,9 +101,17 @@ class AuthService:
     def reset_password(self, email: str):
         logger.info(f"Requesting password reset for: {email}")
         try:
-            self.supabase.auth.reset_password_for_email(email)
+            http_client = httpx.Client(timeout=60.0, http2=False)
+            options = ClientOptions(httpx_client=http_client)
+            client = create_client(
+                settings.SUPABASE_URL,
+                settings.SUPABASE_ANON_KEY,
+                options=options
+            )
+            client.auth.reset_password_for_email(email)
             logger.info(f"Password reset link sent to {email}")
             return True
         except Exception as e:
             logger.error(f"Error requesting password reset: {str(e)}")
             raise e
+
