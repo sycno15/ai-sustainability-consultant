@@ -1,7 +1,7 @@
 import logging
 # pyrefly: ignore [missing-import]
 from pydantic_settings import BaseSettings
-from pydantic import Field
+from pydantic import Field, field_validator
 
 # Configure logging
 logging.basicConfig(
@@ -23,6 +23,15 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str = Field(..., min_length=1)
     FRONTEND_URL: str = "http://localhost:3000"
     BACKEND_URL: str = "http://localhost:8000"
+
+    @field_validator("SUPABASE_URL", mode="before")
+    def normalize_supabase_url(cls, value):
+        if not isinstance(value, str):
+            return value
+        normalized = value.strip().rstrip("/")
+        if normalized.endswith("/auth/v1"):
+            normalized = normalized[: -len("/auth/v1")].rstrip("/")
+        return normalized
 
     class Config:
         env_file = ".env"
