@@ -64,17 +64,48 @@ class AuthService:
                 "email": email,
                 "password": password
             })
-            
-            session = response.session
+
+            def _extract_field(obj, field):
+                if obj is None:
+                    return None
+                if isinstance(obj, dict):
+                    return obj.get(field)
+                return getattr(obj, field, None)
+
+            error = _extract_field(response, "error")
+            if error is None:
+                error = _extract_field(response, "msg") or _extract_field(response, "message")
+
+            session = _extract_field(response, "session")
+            if session is None:
+                data = _extract_field(response, "data")
+                session = _extract_field(data, "session")
+
+            if error:
+                if isinstance(error, dict):
+                    message = error.get("message") or error.get("msg") or str(error)
+                else:
+                    message = str(error)
+                raise Exception(message or "Login failed due to Supabase auth error.")
+
             if not session:
-                raise Exception("No active session returned from Supabase Auth.")
-                
+                raise Exception(
+                    "No active session returned from Supabase Auth. "
+                    "Check credentials, Supabase anon key, and auth settings."
+                )
+
+            access_token = _extract_field(session, "access_token")
+            refresh_token = _extract_field(session, "refresh_token")
+            expires_in = _extract_field(session, "expires_in")
+            if not access_token or not refresh_token:
+                raise Exception("Supabase session does not contain tokens.")
+
             return {
-                "access_token": session.access_token,
-                "refresh_token": session.refresh_token,
-                "expires_in": session.expires_in
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+                "expires_in": expires_in
             }
-            
+
         except Exception as e:
             logger.error(f"Error during login: {str(e)}")
             raise e
