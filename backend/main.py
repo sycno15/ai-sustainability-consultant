@@ -25,6 +25,8 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        settings.FRONTEND_URL,
+        "http://localhost:3000",
         "https://ai-sustainability-consultant.vercel.app",
     ],
     allow_credentials=True,
