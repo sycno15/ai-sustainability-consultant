@@ -49,6 +49,11 @@ app.include_router(internal_router)
 @app.on_event("startup")
 async def startup_event():
     logger.info("Initializing AI Sustainability Consultant Backend...")
+    try:
+        from app.utils.db_init import create_tables
+        create_tables()
+    except Exception as e:
+        logger.warning(f"Startup table verification/migration warning: {str(e)}")
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):

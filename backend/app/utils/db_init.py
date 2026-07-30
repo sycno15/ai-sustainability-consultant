@@ -23,7 +23,24 @@ def get_csv_rows(csv_path):
 def create_tables():
     logger.info("Creating all database tables...")
     Base.metadata.create_all(bind=engine)
-    logger.info("Database tables created successfully.")
+    
+    logger.info("Verifying missing columns and running migrations...")
+    migration_queries = [
+        "ALTER TABLE analyses ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();",
+        "ALTER TABLE reports ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();",
+        "ALTER TABLE email_logs ADD COLUMN IF NOT EXISTS sent_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();",
+        "ALTER TABLE session_memory ADD COLUMN IF NOT EXISTS last_analysis TIMESTAMP WITH TIME ZONE DEFAULT NOW();"
+    ]
+    with engine.connect() as conn:
+        for query in migration_queries:
+            try:
+                conn.execute(text(query))
+                conn.commit()
+            except Exception as e:
+                logger.warning(f"Migration execution info: {query[:60]}... -> {str(e)}")
+
+    logger.info("Database tables and columns created/updated successfully.")
 
 def enable_rls():
     logger.info("Configuring Row Level Security (RLS) and policies...")
