@@ -17,14 +17,23 @@ def verify_internal_token(x_internal_token: str = Header(..., alias="X-Internal-
             detail="Invalid internal service token."
         )
 
+async def _run_orchestrator_internal_bg(analysis_id: UUID):
+    from app.utils.db import SessionLocal
+    db = SessionLocal()
+    try:
+        await Orchestrator.run_workflow(db, analysis_id)
+    except Exception as e:
+        logger.error(f"[Internal] Error running background orchestrator: {str(e)}")
+    finally:
+        db.close()
+
 @router.post("/orchestrator/start", dependencies=[Depends(verify_internal_token)])
 async def start_orchestrator(
     payload: InternalOrchestratorStart,
-    background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db)
+    background_tasks: BackgroundTasks
 ):
     logger.info(f"[Internal] Queueing orchestrator background task for analysis ID: {payload.analysis_id}")
-    background_tasks.add_task(Orchestrator.run_workflow, db, payload.analysis_id)
+    background_tasks.add_task(_run_orchestrator_internal_bg, payload.analysis_id)
     return {
         "success": True,
         "data": {

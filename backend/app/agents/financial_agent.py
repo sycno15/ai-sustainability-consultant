@@ -39,24 +39,29 @@ class FinancialAgent:
         for rec in recommendations:
             title = rec.get("title", "")
             # Find matching measure
-            measure = db.query(SustainabilityMeasure).filter(
-                SustainabilityMeasure.title.ilike(title)
-            ).first()
+            measure = None
+            cost_rec = None
+            try:
+                measure = db.query(SustainabilityMeasure).filter(
+                    SustainabilityMeasure.title.ilike(title)
+                ).first()
+                if measure:
+                    cost_rec = db.query(TechnologyCost).filter(
+                        TechnologyCost.measure_id == measure.id
+                    ).first()
+            except Exception as e:
+                logger.warning(f"Financial Agent: DB query for {title} failed ({e}). Using standard defaults.")
             
             cost = 250000.0 # INR fallback
             roi = 20.0
             savings = 50000.0
             payback = 5.0
             
-            if measure:
-                cost_rec = db.query(TechnologyCost).filter(
-                    TechnologyCost.measure_id == measure.id
-                ).first()
-                if cost_rec:
-                    cost = float(cost_rec.implementation_cost)
-                    savings = float(cost_rec.annual_savings)
-                    payback = float(cost_rec.roi_years) # payback in years
-                    roi = (savings / cost * 100) if cost > 0 else 20.0
+            if cost_rec:
+                cost = float(cost_rec.implementation_cost)
+                savings = float(cost_rec.annual_savings)
+                payback = float(cost_rec.roi_years) # payback in years
+                roi = (savings / cost * 100) if cost > 0 else 20.0
                     
             budget_fit = cost <= budget if budget > 0 else True
             

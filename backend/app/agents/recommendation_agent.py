@@ -28,13 +28,17 @@ class RecommendationAgent:
         industry = business.get("industry", "Manufacturing")
         
         # 1. Fetch industry measures from database
-        measures = db.query(SustainabilityMeasure).filter(
-            SustainabilityMeasure.industry.ilike(industry)
-        ).all()
-        
-        # If no industry-specific measures found, fallback to all measures
-        if not measures:
-            measures = db.query(SustainabilityMeasure).all()
+        try:
+            measures = db.query(SustainabilityMeasure).filter(
+                SustainabilityMeasure.industry.ilike(industry)
+            ).all()
+            
+            # If no industry-specific measures found, fallback to all measures
+            if not measures:
+                measures = db.query(SustainabilityMeasure).all()
+        except Exception as e:
+            logger.warning(f"Recommendation Agent: DB query for measures failed ({e}). Using empty fallback.")
+            measures = []
             
         measures_list = [
             {

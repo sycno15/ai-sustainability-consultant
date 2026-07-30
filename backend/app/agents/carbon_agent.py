@@ -24,9 +24,16 @@ class CarbonAgent:
         metrics = shared_state.get("metrics", {})
         business = shared_state.get("business", {})
         
-        # 1. Fetch emission factors from database
-        factors = db.query(EmissionFactor).all()
-        factor_map = {f.activity.lower(): float(f.emission_factor) for f in factors}
+        # 1. Fetch emission factors from database with fallbacks
+        try:
+            factors = db.query(EmissionFactor).all()
+            factor_map = {
+                f.activity.lower(): float(f.emission_factor) 
+                for f in factors if f and getattr(f, "activity", None) and getattr(f, "emission_factor", None) is not None
+            }
+        except Exception as e:
+            logger.warning(f"Carbon Agent: DB query for emission factors failed ({e}). Using standard fallbacks.")
+            factor_map = {}
         
         # Enforce ponytail philosophy: standard fallbacks if db factors are empty
         electricity_factor = factor_map.get("electricity", 0.42)
@@ -35,12 +42,19 @@ class CarbonAgent:
         water_factor = factor_map.get("water", 0.34)
         waste_factor = factor_map.get("waste", 0.52)
         
+        # Helper safely parsing numeric metric values
+        def safe_float(val) -> float:
+            try:
+                return float(val) if val is not None else 0.0
+            except (ValueError, TypeError):
+                return 0.0
+
         # 2. Calculate emissions deterministically
-        electricity_emissions = float(metrics.get("electricity_usage") or 0.0) * electricity_factor
-        diesel_emissions = float(metrics.get("diesel_usage") or 0.0) * diesel_factor
-        petrol_emissions = float(metrics.get("petrol_usage") or 0.0) * petrol_factor
-        water_emissions = float(metrics.get("water_usage") or 0.0) * water_factor
-        waste_emissions = float(metrics.get("waste_generated") or 0.0) * waste_factor
+        electricity_emissions = safe_float(metrics.get("electricity_usage")) * electricity_factor
+        diesel_emissions = safe_float(metrics.get("diesel_usage")) * diesel_factor
+        petrol_emissions = safe_float(metrics.get("petrol_usage")) * petrol_factor
+        water_emissions = safe_float(metrics.get("water_usage")) * water_factor
+        waste_emissions = safe_float(metrics.get("waste_generated")) * waste_factor
         
         total_emissions = electricity_emissions + diesel_emissions + petrol_emissions + water_emissions + waste_emissions
         
