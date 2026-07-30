@@ -8,8 +8,14 @@ from app.config import logger
 def load_prompt(filename: str) -> str:
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     path = os.path.join(base_dir, "prompts", filename)
-    with open(path, "r", encoding="utf-8") as f:
-        return f.read()
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception as e:
+        logger.warning(f"Could not load prompt {filename}: {e}")
+        if filename == "financial.md":
+            return "Sustainability Financial Analyst: Calculate costs, savings, ROI and payback in INR."
+        return "Sustainability System Directives: Provide output formatted strictly as JSON."
 
 class FinancialAgent:
     @staticmethod
@@ -20,8 +26,8 @@ class FinancialAgent:
         goals = shared_state.get("goals", {})
         currency_symbol = shared_state.get("currency_symbol", "Rs.")
         
-        budget = float(metrics.get("sustainability_budget", 0.0))
-        revenue = float(metrics.get("annual_revenue", 0.0))
+        budget = float(metrics.get("sustainability_budget") or 0.0)
+        revenue = float(metrics.get("annual_revenue") or 0.0)
         
         # 1. Resolve costs for each recommendation
         recommendation_costs = []
@@ -75,6 +81,9 @@ class FinancialAgent:
         
         system_instruction = f"{global_inst}\n\n{fin_inst}"
         
+        user_feedback = shared_state.get("user_feedback")
+        feedback_prompt = f"\nUser Revision Feedback: {user_feedback}\nAdjust financial estimations if affected by feedback." if user_feedback else ""
+        
         prompt = f"""
         Business Metrics (all amounts in Indian Rupees / INR):
         - Annual Revenue: {currency_symbol}{revenue:,.2f}
@@ -84,6 +93,7 @@ class FinancialAgent:
         - Target reduction: {goals.get("reduction_goal", 20)}%
         - Priority: {goals.get("priority", "ROI")}
         - Timeline: {goals.get("timeline_months", 12)} months
+        {feedback_prompt}
         
         Calculated Financials (INR):
         - Total Estimated Cost: {currency_symbol}{total_cost:,.2f}
@@ -98,7 +108,8 @@ class FinancialAgent:
         llm_response = await LLMService.call_model(prompt, system_instruction, json_mode=True)
         
         try:
-            result = json.loads(llm_response)
+            result = LLMService.clean_and_parse_json(llm_response)
+
             # Enforce deterministic calculations
             result["financial_summary"] = {
                 "total_cost": round(total_cost, 2),

@@ -9,6 +9,25 @@ from typing import Dict, Any
 
 class PDFService:
     @staticmethod
+    def _sanitize_for_latin1(text_str: str) -> str:
+        replacements = {
+            "₹": "Rs.",
+            "–": "-",
+            "—": "-",
+            "’": "'",
+            "‘": "'",
+            "“": '"',
+            "”": '"',
+            "•": "*",
+            "…": "...",
+            "\u200b": "",
+        }
+        for orig, repl in replacements.items():
+            text_str = text_str.replace(orig, repl)
+        text_str = text_str.replace("Rs.Rs.", "Rs.")
+        return text_str.encode("latin-1", "replace").decode("latin-1")
+
+    @staticmethod
     def _to_text(value: Any, fallback: str = "") -> str:
         if value is None:
             return fallback
@@ -16,11 +35,11 @@ class PDFService:
             parts = []
             for key, item in value.items():
                 parts.append(f"{key}: {PDFService._to_text(item)}")
-            return "; ".join(parts) if parts else fallback
+            return PDFService._sanitize_for_latin1("; ".join(parts) if parts else fallback)
         if isinstance(value, list):
-            return "; ".join(PDFService._to_text(item) for item in value if item is not None)
-        # Helvetica cannot render ₹; normalize currency for PDF output
-        return str(value).replace("₹", "Rs.").replace("Rs.Rs.", "Rs.")
+            return PDFService._sanitize_for_latin1("; ".join(PDFService._to_text(item) for item in value if item is not None))
+        return PDFService._sanitize_for_latin1(str(value))
+
 
     @staticmethod
     def _safe_paragraph(text: Any, style, fallback: str = "") -> Paragraph:

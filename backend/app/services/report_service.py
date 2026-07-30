@@ -83,14 +83,20 @@ class ReportService:
             
         # 1. Save feedback
         ReportRepository.create_feedback(db, report_id, feedback_text)
-        # 2. Update analysis status to RUNNING to trigger replanning/revision loop
-        # We also reset the current_agent to "Critic Agent" or let the orchestrator route it
+        
+        # 2. Update shared_state with user_feedback
+        shared_state = report.analysis.shared_state if isinstance(report.analysis.shared_state, dict) else {}
+        shared_state["user_feedback"] = feedback_text
+
+        # 3. Update analysis status to RUNNING to trigger replanning/revision loop
         WorkflowRepository.update_analysis_status(
             db=db,
             analysis_id=report.analysis_id,
             workflow_status="RUNNING",
-            current_agent="Critic Agent"
+            current_agent="Recommendation Agent",
+            shared_state=shared_state
         )
+
         
         # Trigger background orchestrator to process revision feedback directly
         background_tasks.add_task(ReportService._run_orchestrator_revision_bg, report.analysis_id)

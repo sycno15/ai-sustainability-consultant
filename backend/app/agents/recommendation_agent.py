@@ -8,8 +8,14 @@ from app.config import logger
 def load_prompt(filename: str) -> str:
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     path = os.path.join(base_dir, "prompts", filename)
-    with open(path, "r", encoding="utf-8") as f:
-        return f.read()
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception as e:
+        logger.warning(f"Could not load prompt {filename}: {e}")
+        if filename == "recommendation.md":
+            return "Sustainability Strategy Consultant: Select and prioritize carbon reduction measures."
+        return "Sustainability System Directives: Provide output formatted strictly as JSON."
 
 class RecommendationAgent:
     @staticmethod
@@ -46,6 +52,9 @@ class RecommendationAgent:
         
         system_instruction = f"{global_inst}\n\n{rec_inst}"
         
+        user_feedback = shared_state.get("user_feedback")
+        feedback_prompt = f"\nUser Revision Feedback: {user_feedback}\nModify recommendations to explicitly satisfy this feedback." if user_feedback else ""
+        
         prompt = f"""
         Business details:
         - Sector: {industry}
@@ -57,6 +66,7 @@ class RecommendationAgent:
         - Strategic priority: {goals.get("priority", "ROI")}
         - Target timeline: {goals.get("timeline_months", 12)} months
         - Notes/constraints: {goals.get("notes") or "None"}
+        {feedback_prompt}
         
         Emissions Profile:
         - Total: {carbon.get("total_emissions")} {carbon.get("unit")}
@@ -72,7 +82,8 @@ class RecommendationAgent:
         llm_response = await LLMService.call_model(prompt, system_instruction, json_mode=True)
         
         try:
-            result = json.loads(llm_response)
+            result = LLMService.clean_and_parse_json(llm_response)
+
             result["status"] = "SUCCESS"
         except Exception as e:
             logger.error(f"Failed to parse Recommendation Agent LLM response: {str(e)}. Using fallback JSON.")

@@ -44,6 +44,7 @@ class Orchestrator:
             "timeline_months": 12,
             "notes": "",
         })
+        user_feedback = existing_state.get("user_feedback")
 
         shared_state = {
             "business": {
@@ -54,15 +55,16 @@ class Orchestrator:
                 "description": profile.description
             },
             "metrics": {
-                "electricity_usage": float(metrics.electricity_usage),
-                "diesel_usage": float(metrics.diesel_usage),
-                "petrol_usage": float(metrics.petrol_usage),
-                "water_usage": float(metrics.water_usage),
-                "waste_generated": float(metrics.waste_generated),
-                "annual_revenue": float(metrics.annual_revenue),
-                "sustainability_budget": float(metrics.sustainability_budget)
+                "electricity_usage": float(metrics.electricity_usage or 0.0),
+                "diesel_usage": float(metrics.diesel_usage or 0.0),
+                "petrol_usage": float(metrics.petrol_usage or 0.0),
+                "water_usage": float(metrics.water_usage or 0.0),
+                "waste_generated": float(metrics.waste_generated or 0.0),
+                "annual_revenue": float(metrics.annual_revenue or 0.0),
+                "sustainability_budget": float(metrics.sustainability_budget or 0.0)
             },
             "goals": goals,
+            "user_feedback": user_feedback,
             "currency": "INR",
             "currency_symbol": "Rs.",
             "carbon_analysis": {},
@@ -73,6 +75,7 @@ class Orchestrator:
             "report": {},
             "metadata": {}
         }
+
         
         # Initialize execution tracking variables
         retry_count = 0
@@ -210,16 +213,20 @@ class Orchestrator:
                         
                     retry_count += 1
                     
-                    # Resolve step index matching target responsible agent
-                    matched_idx = next(
-                        (i for i, step in enumerate(agent_steps) if step[0] == responsible_agent), 
-                        2 # Default back to Financial Agent if not resolved
-                    )
-                    
+                    # Normalize target agent string matching
+                    norm_resp = str(responsible_agent).lower().replace("_", "").replace(" ", "")
+                    matched_idx = 1 # Default back to Recommendation Agent pointer
+                    for i, step in enumerate(agent_steps):
+                        norm_step = step[0].lower().replace("_", "").replace(" ", "")
+                        if norm_step in norm_resp or norm_resp in norm_step:
+                            matched_idx = i
+                            break
+
                     # Backtrack step index pointer
                     step_idx = matched_idx
-                    logger.info(f"Orchestrator: Backtracking execution pointer to Step {step_idx}: {responsible_agent}.")
+                    logger.info(f"Orchestrator: Backtracking execution pointer to Step {step_idx}: {agent_steps[step_idx][0]}.")
                     continue # Bypass step_idx increment
+
                     
                 else:
                     # Treat critic FAILED as global failure

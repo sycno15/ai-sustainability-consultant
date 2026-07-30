@@ -31,9 +31,7 @@ class WorkflowService:
             progress = 0
         elif status_str == "COMPLETED":
             progress = 100
-        elif status_str == "FAILED":
-            progress = 100
-        elif status_str == "RUNNING":
+        elif status_str in ("RUNNING", "FAILED"):
             agent_progress_map = {
                 "Carbon Agent": 15,
                 "Recommendation Agent": 35,

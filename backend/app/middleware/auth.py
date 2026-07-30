@@ -57,9 +57,12 @@ def get_current_user(
         
         user = UserRepository.get_user_by_id(db, user_uuid)
         if not user:
-            full_name = payload.get("user_metadata", {}).get("full_name", email.split('@')[0])
-            user = UserRepository.create_user(db, user_id=user_uuid, email=email, full_name=full_name)
+            safe_email = email or f"{user_id_str}@user.local"
+            email_prefix = safe_email.split('@')[0] if '@' in safe_email else safe_email
+            full_name = payload.get("user_metadata", {}).get("full_name") or email_prefix
+            user = UserRepository.create_user(db, user_id=user_uuid, email=safe_email, full_name=full_name)
             logger.info(f"User {user_uuid} auto-mirrored locally on auth check.")
+
             
         return user
         

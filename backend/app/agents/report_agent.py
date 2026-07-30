@@ -7,8 +7,14 @@ from app.config import logger
 def load_prompt(filename: str) -> str:
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     path = os.path.join(base_dir, "prompts", filename)
-    with open(path, "r", encoding="utf-8") as f:
-        return f.read()
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception as e:
+        logger.warning(f"Could not load prompt {filename}: {e}")
+        if filename == "report.md":
+            return "Sustainability Report Writer: Synthesize agent outputs into executive report JSON."
+        return "Sustainability System Directives: Provide output formatted strictly as JSON."
 
 class ReportAgent:
     @staticmethod
@@ -20,10 +26,14 @@ class ReportAgent:
         
         system_instruction = f"{global_inst}\n\n{report_inst}"
         
+        user_feedback = shared_state.get("user_feedback")
+        feedback_prompt = f"\nUser Revision Feedback: {user_feedback}\nEnsure executive summary and next steps reflect user feedback." if user_feedback else ""
+
         # Call LLM with the entire shared context
         prompt = f"""
         Entire Shared context:
         {json.dumps(shared_state)}
+        {feedback_prompt}
         
         Synthesize these sections into a professional, cohesive business report suited for executive decision makers in India.
         All monetary figures must use Indian Rupees as "Rs." or "INR" (example: Rs. 2,50,000). Never use the ₹ symbol or dollars.
@@ -34,7 +44,8 @@ class ReportAgent:
         llm_response = await LLMService.call_model(prompt, system_instruction, json_mode=True)
         
         try:
-            result = json.loads(llm_response)
+            result = LLMService.clean_and_parse_json(llm_response)
+
             result["status"] = "SUCCESS"
         except Exception as e:
             logger.error(f"Failed to parse Report Agent LLM response: {str(e)}. Using fallback JSON.")

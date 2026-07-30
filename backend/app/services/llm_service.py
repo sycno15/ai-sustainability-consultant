@@ -60,6 +60,31 @@ class LLMService:
         return LLMService._get_mock_response(system_instruction, prompt)
 
     @staticmethod
+    def clean_and_parse_json(text: str) -> dict:
+        """Safely extract and parse JSON from LLM response text, stripping markdown blocks."""
+        if not text:
+            raise ValueError("Empty LLM response text")
+        
+        cleaned = text.strip()
+        if cleaned.startswith("```"):
+            lines = cleaned.splitlines()
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].startswith("```"):
+                lines = lines[:-1]
+            cleaned = "\n".join(lines).strip()
+            
+        try:
+            return json.loads(cleaned)
+        except Exception:
+            start = cleaned.find("{")
+            end = cleaned.rfind("}")
+            if start != -1 and end != -1 and end > start:
+                json_str = cleaned[start:end+1]
+                return json.loads(json_str)
+            raise
+
+    @staticmethod
     def _get_mock_response(system_instruction: str, prompt: str) -> str:
         # Match agent using unique role headers to prevent global_instruction conflicts
         sys_lower = system_instruction.lower()

@@ -7,8 +7,14 @@ from app.config import logger
 def load_prompt(filename: str) -> str:
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     path = os.path.join(base_dir, "prompts", filename)
-    with open(path, "r", encoding="utf-8") as f:
-        return f.read()
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception as e:
+        logger.warning(f"Could not load prompt {filename}: {e}")
+        if filename == "critic.md":
+            return "Quality Assurance Agent: Evaluate agent outputs and return PASS, REVISE, or FAILED."
+        return "Sustainability System Directives: Provide output formatted strictly as JSON."
 
 class CriticAgent:
     @staticmethod
@@ -37,7 +43,7 @@ class CriticAgent:
         llm_response = await LLMService.call_model(prompt, system_instruction, json_mode=True)
         
         try:
-            result = json.loads(llm_response)
+            result = LLMService.clean_and_parse_json(llm_response)
         except Exception as e:
             logger.error(f"Failed to parse Critic Agent LLM response: {str(e)}. Using fallback PASS.")
             result = {

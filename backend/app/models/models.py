@@ -86,6 +86,7 @@ class Analysis(Base):
     current_agent = Column(String(50), nullable=True)
     retry_count = Column(Integer, default=0)
     shared_state = Column(JSONB, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     business = relationship("BusinessProfile", back_populates="analyses")
     reports = relationship("Report", back_populates="analysis", cascade="all, delete-orphan")
@@ -100,10 +101,12 @@ class Report(Base):
     pdf_url = Column(String(500), nullable=True)
     approved = Column(Boolean, default=False)
     overall_score = Column(Numeric(5, 2), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     analysis = relationship("Analysis", back_populates="reports")
     feedbacks = relationship("Feedback", back_populates="report", cascade="all, delete-orphan")
     email_logs = relationship("EmailLog", back_populates="report", cascade="all, delete-orphan")
+
 
 class Feedback(Base):
     __tablename__ = "feedback"

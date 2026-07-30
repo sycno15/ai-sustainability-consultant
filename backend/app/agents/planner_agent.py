@@ -7,8 +7,14 @@ from app.config import logger
 def load_prompt(filename: str) -> str:
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     path = os.path.join(base_dir, "prompts", filename)
-    with open(path, "r", encoding="utf-8") as f:
-        return f.read()
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception as e:
+        logger.warning(f"Could not load prompt {filename}: {e}")
+        if filename == "planner.md":
+            return "Sustainability Implementation Planner: Structure recommendations into chronological phases."
+        return "Sustainability System Directives: Provide output formatted strictly as JSON."
 
 class PlannerAgent:
     @staticmethod
@@ -25,6 +31,9 @@ class PlannerAgent:
         
         system_instruction = f"{global_inst}\n\n{plan_inst}"
         
+        user_feedback = shared_state.get("user_feedback")
+        feedback_prompt = f"\nUser Revision Feedback: {user_feedback}\nAdjust timeline and phasing if requested by user." if user_feedback else ""
+        
         prompt = f"""
         Business details:
         - Size: {business.get("company_size")}
@@ -35,6 +44,7 @@ class PlannerAgent:
         - Priority: {goals.get("priority", "ROI")}
         - Target timeline: {timeline_months} months
         - Notes: {goals.get("notes") or "None"}
+        {feedback_prompt}
         
         Recommendations:
         {json.dumps(recommendations)}
@@ -48,7 +58,8 @@ class PlannerAgent:
         llm_response = await LLMService.call_model(prompt, system_instruction, json_mode=True)
         
         try:
-            result = json.loads(llm_response)
+            result = LLMService.clean_and_parse_json(llm_response)
+
             result["status"] = "SUCCESS"
         except Exception as e:
             logger.error(f"Failed to parse Planner Agent LLM response: {str(e)}. Using fallback JSON.")

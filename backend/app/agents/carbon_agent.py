@@ -8,8 +8,14 @@ from app.config import logger
 def load_prompt(filename: str) -> str:
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     path = os.path.join(base_dir, "prompts", filename)
-    with open(path, "r", encoding="utf-8") as f:
-        return f.read()
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception as e:
+        logger.warning(f"Could not load prompt {filename}: {e}")
+        if filename == "carbon.md":
+            return "Carbon Assessment Agent: Calculate GHG footprint and emissions breakdown."
+        return "Sustainability System Directives: Provide output formatted strictly as JSON."
 
 class CarbonAgent:
     @staticmethod
@@ -30,11 +36,11 @@ class CarbonAgent:
         waste_factor = factor_map.get("waste", 0.52)
         
         # 2. Calculate emissions deterministically
-        electricity_emissions = float(metrics.get("electricity_usage", 0.0)) * electricity_factor
-        diesel_emissions = float(metrics.get("diesel_usage", 0.0)) * diesel_factor
-        petrol_emissions = float(metrics.get("petrol_usage", 0.0)) * petrol_factor
-        water_emissions = float(metrics.get("water_usage", 0.0)) * water_factor
-        waste_emissions = float(metrics.get("waste_generated", 0.0)) * waste_factor
+        electricity_emissions = float(metrics.get("electricity_usage") or 0.0) * electricity_factor
+        diesel_emissions = float(metrics.get("diesel_usage") or 0.0) * diesel_factor
+        petrol_emissions = float(metrics.get("petrol_usage") or 0.0) * petrol_factor
+        water_emissions = float(metrics.get("water_usage") or 0.0) * water_factor
+        waste_emissions = float(metrics.get("waste_generated") or 0.0) * waste_factor
         
         total_emissions = electricity_emissions + diesel_emissions + petrol_emissions + water_emissions + waste_emissions
         
@@ -71,7 +77,7 @@ class CarbonAgent:
         llm_response = await LLMService.call_model(prompt, system_instruction, json_mode=True)
         
         try:
-            result = json.loads(llm_response)
+            result = LLMService.clean_and_parse_json(llm_response)
             # Ensure calculations in final JSON are the deterministic ones we computed
             result["total_emissions"] = round(total_emissions, 2)
             result["breakdown"] = [
